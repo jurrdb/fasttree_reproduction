@@ -19,20 +19,6 @@ def sequence_to_profile(sequence):
     return profile
 
 
-
-
-
-def sequence_distance_uncorrected(profileA, profileB):
-    # Uncorrected distance is the fraction of places that differ
-
-    return (profileA == profileB).sum() / profileA.shape[0]
-
-
-def sequence_distance_corrected(profileA, profileB):
-    # Calculates the corrected (Jukes-Cantor) distance
-    return -3/4 * np.log(1 - 4 / 3 * sequence_distance_corrected(profileA, profileB))
-
-
 def compute_total_profile(sequences, sequence_length):
     number_of_sequences = len(sequences)
     print('Number of sequences:', number_of_sequences)
@@ -70,10 +56,12 @@ def run(sequences, sequence_length):
 
     profile0 = sequence_to_profile(sequences['>0'])
     profile1 = sequence_to_profile(sequences['>1'])
-    d = sequence_distance_uncorrected(profile0, profile1)
-    print(d)
+    # d = sequence_distance_uncorrected(profile0, profile1)
+    # print(d)
 
 
 if __name__ == '__main__':
     sequences, sequence_length = parse_input()
     run(sequences, sequence_length)
+
+    print(sequence_distance_uncorrected(sequences['>0'], sequences['>1']))
