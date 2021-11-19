@@ -8,18 +8,20 @@ def compute_total_profile(sequences, sequence_length):
     # Total profile is an array of dictionaries. Each index in the array represents a position in the sequence, and
     # each dictionary represents the frequency of nucleotides in that position.
     total_profile = []
+    pseudo_total = number_of_sequences + 4
+    pseudo_freq = 1.0 / pseudo_total
     for i in range(0, sequence_length):
         total_profile.append({
-            'A': 0.0,
-            'C': 0.0,
-            'T': 0.0,
-            'G': 0.0,
+            'A': pseudo_freq,
+            'C': pseudo_freq,
+            'T': pseudo_freq,
+            'G': pseudo_freq,
         })
 
     for key, sequence in sequences.items():
         # Iterate over every sequence
         for i, nt in enumerate(sequence):
-            total_profile[i][nt] += 1.0 / number_of_sequences
+            total_profile[i][nt] += 1.0 / pseudo_total
 
     return total_profile
 
