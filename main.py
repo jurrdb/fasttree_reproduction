@@ -1,5 +1,11 @@
 import numpy as np
 
+import datastructures
+
+# u(i) = up-distance: "The average distance of the node from its children."
+# Δ(i,j) = profile distance
+# r(i) = out-distance: "average out distance of i to other active nodes"
+
 nt_map = {
     'A': 0,
     'C': 1,
@@ -48,11 +54,26 @@ def parse_input():
         return sequences, sequence_length
 
 
+def sequences_to_trees(sequences, total_profile):
+    nodes = list()
+    active_nodes = len(sequences)
+    for name, s in sequences.items():
+        tree = datastructures.Tree()
+        tree.name = name
+        tree.profile = sequence_to_profile(s)
+        tree.calculate_out_distance(total_profile, active_nodes)
+        nodes.append(tree)
+    return nodes
+
+
 def run(sequences, sequence_length):
     total_profile = compute_total_profile(sequences, sequence_length)
     print('Total profile:')
+
     for nt_profile in total_profile:
         print(nt_profile)
+
+    nodes = sequences_to_trees(sequences, total_profile)
 
     profile0 = sequence_to_profile(sequences['>0'])
     profile1 = sequence_to_profile(sequences['>1'])
@@ -64,4 +85,4 @@ if __name__ == '__main__':
     sequences, sequence_length = parse_input()
     run(sequences, sequence_length)
 
-    print(sequence_distance_uncorrected(sequences['>0'], sequences['>1']))
+    # print(sequence_distance_uncorrected(sequences['>0'], sequences['>1']))
