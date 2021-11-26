@@ -1,10 +1,16 @@
 import numpy as np
 
-import datastructures
+import distance_measures
+import tree
 
 # u(i) = up-distance: "The average distance of the node from its children."
 # Δ(i,j) = profile distance
+# P(AB) = average profile
+# d_u(i,j) = Distance between internal nodes: d_u(i,j) = Δ(i,j) - u(i) - u(j)
+
+# NOT USED in Fast Tree:
 # r(i) = out-distance: "average out distance of i to other active nodes"
+
 
 nt_map = {
     'A': 0,
@@ -58,11 +64,11 @@ def sequences_to_trees(sequences, total_profile):
     nodes = list()
     active_nodes = len(sequences)
     for name, s in sequences.items():
-        tree = datastructures.Tree()
-        tree.name = name
-        tree.profile = sequence_to_profile(s)
-        tree.calculate_out_distance(total_profile, active_nodes)
-        nodes.append(tree)
+        node = tree.Tree()
+        node.name = name
+        node.profile = sequence_to_profile(s)
+        node.calculate_out_distance(total_profile, active_nodes)
+        nodes.append(node)
     return nodes
 
 
@@ -73,7 +79,27 @@ def run(sequences, sequence_length):
     for nt_profile in total_profile:
         print(nt_profile)
 
-    nodes = sequences_to_trees(sequences, total_profile)
+    active_nodes = sequences_to_trees(sequences, total_profile)
+    leaf_nodes = []
+
+    while len(active_nodes) > 0:
+        # Find best candidates for join using criterion
+        min = np.inf
+        pair = ()
+        for i, node_a in enumerate(active_nodes):
+            for node_b in active_nodes[i + 1:]:
+                dis = distance_measures.profile_distance_corrected(node_a,
+                                                                   node_b) - node_a.out_distance - node_b.out_distance
+                if dis < min:
+                    min = dis
+                    pair = (node_a, node_b)
+        # Join nodes, update values
+        active_nodes.remove(pair[0])
+        active_nodes.remove(pair[1])
+        leaf_nodes.append(pair[0])
+        leaf_nodes.append(pair[1])
+        parent = tree.join_nodes(pair[0], pair[1], total_profile, len(active_nodes))
+        # leaf_nodes.append(parent)
 
     profile0 = sequence_to_profile(sequences['>0'])
     profile1 = sequence_to_profile(sequences['>1'])

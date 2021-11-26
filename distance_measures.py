@@ -37,6 +37,6 @@ def profile_distance_uncorrected(A, B):
     return profile_distance_uncorrected(A.left, A.right) / 2 + profile_distance_uncorrected(B.left, B.right) / 2
 
 
-def profile_distance_corrected(profile_A, profile_B):
-    # TODO correct for the proportion of nongaps (See section 'Distance Between Profils')
-    return profile_distance_uncorrected(profile_A, profile_B)
+def profile_distance_corrected(A, B):
+    # TODO correct for the proportion of nongaps (See section 'Distance Between Profiles')
+    return profile_distance_uncorrected(A, B)
