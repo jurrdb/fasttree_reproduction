@@ -17,7 +17,6 @@ from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_a
 # r(i) = out-distance: "average out distance of i to other active nodes"
 
 
-
 def parse_input():
     with open('data/fasttree-input.aln') as f:
         lines = f.readlines()
@@ -74,9 +73,6 @@ def run(sequences, sequence_length):
     counter = helpers.Counter(max_rounds=max_rounds)
     # TODO do more than one postorder run
     final_topology = interchange_nodes(active_nodes[0], counter)
-    # profile0 = sequence_to_profile(sequences['>0'])
-    # profile1 = sequence_to_profile(sequences['>1'])
-    # d = sequence_distance_uncorrected(profile0, profile1)
     return initial_topology, final_topology
 
 
