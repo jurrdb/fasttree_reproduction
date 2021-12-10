@@ -1,7 +1,11 @@
+import copy
+import math
+
 import numpy as np
 
 import distance_measures as dm
 import tree
+import helpers
 
 # u(i) = up-distance: "The average distance of the node from its children."
 # Δ(i,j) = profile distance
@@ -61,20 +65,25 @@ def parse_input():
 
 
 def sequences_to_trees(sequences, total_profile):
+    '''
+    Converts each nucleotide sequence to a list of Tree node objects. Each Tree will initially contain only a single
+    node
+    :param sequences: dictionary containing nucleotide sequences
+    :param total_profile: average profile of all nucleotides
+    :return: list of Tree nodes
+    '''
     nodes = list()
-    active_nodes = len(sequences)
+    num_active_nodes = len(sequences)
     for name, s in sequences.items():
         node = tree.Tree()
         node.name = name
         node.profile = sequence_to_profile(s)
-        node.calculate_out_distance(total_profile, active_nodes)
+        node.calculate_out_distance(total_profile, num_active_nodes)
         nodes.append(node)
     return nodes
 
 
-
-
-def interchange_nodes(tree):
+def interchange_nodes(tree, counter):
     """
              R
             / \
@@ -103,11 +112,14 @@ def interchange_nodes(tree):
      we compare the current topology AB|CD to the alternate topologies
      AC|BD and AD|BC, by using the 4 relevant profiles.
     """
+    if not tree or tree.is_leaf() or counter.count >= counter.max_rounds:
+        return tree
+
     # Algorithm Postorder(tree)
     #    1. Traverse the left subtree, i.e., call Postorder(left-subtree)
-    interchange_nodes(tree.left)
+    tree.left = interchange_nodes(tree.left, counter)
     #    2. Traverse the right subtree, i.e., call Postorder(right-subtree)
-    interchange_nodes(tree.right)
+    tree.right = interchange_nodes(tree.right, counter)
     #    3. Visit the root.
     # perform interchange (get relevant subtrees A B C D and calculate best topology)
     try:
@@ -116,33 +128,32 @@ def interchange_nodes(tree):
         C = tree.left.right
         D = tree.right
 
+        if A and B and C and D:
+            # reached count?
+            N = tree.left.left
+            # Calculate distances
+            # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
+            dist_ABCD = dm.profile_distance_corrected(A, B) + dm.profile_distance_corrected(C, D)
+            dist_ACBD = dm.profile_distance_corrected(A, C) + dm.profile_distance_corrected(B, D)
+            dist_ADBC = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
+
+            if dist_ACBD < dist_ABCD and dist_ACBD < dist_ADBC:
+                print("performed interchange")
+                # dist_ACBD is smallest, B and C swapped
+                N.right = C
+                tree.left.right = B
+                counter.count += 1
+            elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
+                print("performed interchange")
+                # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
+                N.right = D
+                tree.right = C
+                tree.left.right = B
+                counter.count += 1
+            # Else dist_ABCD is smallest, do nothing
     except AttributeError:
-        print("Error")
-    if A and B and C and D:
-
-        N = tree.left.left
-        # Calculate distances
-        # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
-        dist_ABCD = dm.profile_distance_corrected(A, B) + dm.profile_distance_corrected(C, D)
-        dist_ACBD = dm.profile_distance_corrected(A, C) + dm.profile_distance_corrected(B, D)
-        dist_ADBC = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
-
-        if dist_ACBD < dist_ABCD and dist_ACBD < dist_ADBC:
-            # dist_ACBD is smallest, B and C swapped
-            N.right = C
-            tree.left.right = B
-        elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
-            # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
-            N.right = D
-            tree.right = C
-            tree.left.right = B
-        # Else dist_ABCD is smallest, do nothing
+        print("interchange_nodes: skipping leaf node")
     return tree
-
-
-def nearest_neighbour_interchange():
-    # for i in range(4 * np.log(n, 2)):
-    pass
 
 
 def run(sequences, sequence_length):
@@ -153,6 +164,7 @@ def run(sequences, sequence_length):
         print(nt_profile)
 
     active_nodes = sequences_to_trees(sequences, total_profile)
+    num_nodes = len(active_nodes)
 
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
@@ -163,17 +175,20 @@ def run(sequences, sequence_length):
                 dis = dm.profile_distance_corrected(node_a, node_b) - node_a.out_distance - node_b.out_distance
                 if dis < min:
                     min = dis
-                    pair = (node_a, node_b)
+                    pair = (node_b, node_a)
         # Join nodes, update values
         active_nodes.remove(pair[0])
         active_nodes.remove(pair[1])
         parent = tree.join_nodes(pair[0], pair[1], total_profile, len(active_nodes))
         active_nodes.append(parent)
-
+    initial_topology = copy.deepcopy(active_nodes[0])
+    max_rounds = math.log2(num_nodes) + 1
+    counter = helpers.Counter(max_rounds=max_rounds)
+    final_topology = interchange_nodes(active_nodes[0], counter)
     # profile0 = sequence_to_profile(sequences['>0'])
     # profile1 = sequence_to_profile(sequences['>1'])
     # d = sequence_distance_uncorrected(profile0, profile1)
-    return active_nodes[0]
+    return initial_topology, final_topology
 
 
 if __name__ == '__main__':
