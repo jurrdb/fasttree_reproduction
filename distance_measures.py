@@ -1,4 +1,5 @@
 import numpy as np
+import functools
 
 
 def sequence_distance_uncorrected(seq_A: str, seq_B: str):
@@ -21,7 +22,7 @@ def delta(Profile_A: np.ndarray, Profile_B: np.ndarray):
     return np.linalg.norm(Profile_A - Profile_B, 1)
 
 
-# @functools.lru_cache(maxsize=None)
+@functools.lru_cache(maxsize=None)
 def profile_distance_uncorrected(A, B):
     return delta(A.profile, B.profile) - A.up_distance - B.up_distance
 
