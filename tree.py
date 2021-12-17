@@ -25,12 +25,15 @@ class Tree(object):
         self.up_distance = distance_measures.delta(self.left.profile, self.right.profile) / 2
 
     def calculate_out_distance(self, total_profile, num_active_nodes):
-        self.out_distance = (num_active_nodes * distance_measures.delta(self.profile, total_profile) \
-                             - (self.up_distance * 2)) / np.max((num_active_nodes - 2, 1))
-
-    def test_out_distance(self, total_profile, num_active_nodes):
+        """
+        :return: out_distance = r(i) = ( n * delta(i, T) - delta(i,i) ) / (n - 2)
+        """
         # "delta(i,i) is the average distance between children of i including self-comparisons"
-        delta_i_i = distance_measures.delta(self.left, self.right)
-        n_
-        self. out_distance = num_active_nodes * distance_measures.delta(self.profile, total_profile)  \
-                             - (np.max((num_active_nodes - 2, 1)) * self.up_distance)
+        if self.left and self.right:
+            delta_i_i = distance_measures.delta(self.left.profile, self.right.profile)
+        elif self.left or self.right:
+            delta_i_i = 2*self.up_distance
+        else:
+            delta_i_i = 0
+        self.out_distance = (num_active_nodes * distance_measures.delta(self.profile, total_profile) \
+                             - delta_i_i) / np.max((num_active_nodes - 2, 1))

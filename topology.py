@@ -106,10 +106,6 @@ def calculate_top_hits_active_nodes(active_nodes, m):
                 if b in node_copy:
                     node_copy.remove(b)
 
-
-    # for node in active_nodes:
-    #     node_copy = copy.copy(active_nodes)
-    #     calculate_top_hits(node, node_copy, target_length)
     return
 
 
@@ -134,6 +130,41 @@ def join_nodes(left_child, right_child, total_profile, num_active_nodes):
     calculate_top_hits(parent, joined_hit_list, math.sqrt(num_active_nodes))
 
     return parent  # should return the new parent as well as the new active_nodes
+
+
+def try_interchange(tree, counter, side_a, side_b):
+    try:
+        # To deal with tree symmetry we use getters that can get both the left and right sided subtree nodes.
+        A = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_a)
+        B = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_b)
+        C = tree.__getattribute__(side_a).__getattribute__(side_b)
+        D = tree.__getattribute__(side_b)
+
+        if A and B and C and D:
+            # reached count?
+            N = tree.__getattribute__(side_a).__getattribute__(side_a)
+            # Calculate distances
+            # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
+            dist_ABCD = dm.profile_distance_corrected(A, B) + dm.profile_distance_corrected(C, D)
+            dist_ACBD = dm.profile_distance_corrected(A, C) + dm.profile_distance_corrected(B, D)
+            dist_ADBC = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
+
+            if dist_ACBD < dist_ABCD and dist_ACBD < dist_ADBC:
+                print("performed interchange (" + side_a + ")")
+                # dist_ACBD is smallest, B and C swapped
+                N.__setattr__(side_b, C)
+                tree.__getattribute__(side_a).__setattr__(side_b, B)
+                counter.count += 1
+            elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
+                print("performed interchange (" + side_a + ")")
+                # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
+                N.__setattr__(side_b, D)
+                tree.__setattr__(side_b, C)
+                tree.__getattribute__(side_a).__setattr__(side_b, B)
+                counter.count += 1
+            # Else dist_ABCD is smallest, do nothing
+    except AttributeError:
+        print("interchange_nodes: skipping leaf node (" + side_a + ")")
 
 
 def interchange_nodes(tree, counter):
@@ -175,35 +206,7 @@ def interchange_nodes(tree, counter):
     tree.right = interchange_nodes(tree.right, counter)
     #    3. Visit the root.
     # perform interchange (get relevant subtrees A B C D and calculate best topology)
-    try:
-        A = tree.left.left.left
-        B = tree.left.left.right
-        C = tree.left.right
-        D = tree.right
 
-        if A and B and C and D:
-            # reached count?
-            N = tree.left.left
-            # Calculate distances
-            # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
-            dist_ABCD = dm.profile_distance_corrected(A, B) + dm.profile_distance_corrected(C, D)
-            dist_ACBD = dm.profile_distance_corrected(A, C) + dm.profile_distance_corrected(B, D)
-            dist_ADBC = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
-
-            if dist_ACBD < dist_ABCD and dist_ACBD < dist_ADBC:
-                print("performed interchange")
-                # dist_ACBD is smallest, B and C swapped
-                N.right = C
-                tree.left.right = B
-                counter.count += 1
-            elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
-                print("performed interchange")
-                # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
-                N.right = D
-                tree.right = C
-                tree.left.right = B
-                counter.count += 1
-            # Else dist_ABCD is smallest, do nothing
-    except AttributeError:
-        print("interchange_nodes: skipping leaf node")
+    try_interchange(tree, counter, 'right', 'left')
+    try_interchange(tree, counter, 'left', 'right')
     return tree

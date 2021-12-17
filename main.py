@@ -39,6 +39,7 @@ def run(sequences, sequence_length):
     calculate_top_hits_active_nodes(active_nodes, math.sqrt(num_nodes))
 
     num_joined_nodes = 0
+    active_nodes = sorted(active_nodes, key=lambda x: x.out_distance,reverse=True)
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
         min = np.inf
@@ -53,7 +54,7 @@ def run(sequences, sequence_length):
                 #  implied by: (See formula on p. 1644)
                 if dis < min:
                     min = dis
-                    pair = (node_b, node_a)
+                    pair = (node_a, node_b)
 
         # Join nodes, update values
         active_nodes.remove(pair[0])
@@ -78,7 +79,7 @@ def run(sequences, sequence_length):
     counter = helpers.Counter(max_rounds=max_rounds)
 
     final_topology = interchange_nodes(active_nodes[0], counter)
-    for i in range(int(math.log2(num_nodes))):
+    for i in range(int(math.log2(num_nodes))*4):
         final_topology = interchange_nodes(final_topology, counter)
 
     return initial_topology, final_topology

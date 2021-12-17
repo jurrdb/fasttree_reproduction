@@ -4,6 +4,9 @@ import main
 from tree import Tree
 
 
+def calculate_branch_lengths(topology):
+    pass
+
 def temp_generate_test_tree():
     # Test structure is same as example in https://en.wikipedia.org/wiki/Newick_format#Examples
     # But without the A node
@@ -29,15 +32,45 @@ def temp_generate_test_tree():
     return F
 
 
+def try_calculate_branch_length(tree, side_a, side_b):
+    try:
+        A = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_a)
+        B = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_b)
+        C = tree.__getattribute__(side_a).__getattribute__(side_b)
+        D = tree.__getattribute__(side_b)
+        # TODO fill in formulas to calculate branch length. HIER lekker verder volgende keer jongens
+        # TODO zie "Branch lengths" section in paper
+    except AttributeError:
+        print("calculate_branch_length: skipping leaf node (" + side_a + ")")
+
+
+def calculate_branch_length(tree):
+    """
+             R
+            / \
+           P   D
+          / \
+          N  C
+         /\
+        A  B
+    """
+    try_calculate_branch_length(tree, 'left', 'right')
+    try_calculate_branch_length(tree, 'right', 'left')
+    pass
+
+
 def traverse_tree_recursively(tree, newick, named_parent_nodes=True):
     parent_node_name = tree.name if named_parent_nodes else ""
     if not tree.left and not tree.right:
+        # Tree is leaf
         return f"{tree.name}:{tree.up_distance}"
     elif tree.left and not tree.right:
+        # Tree has a left child, no right child
         return f"(,{traverse_tree_recursively(tree.left, newick, named_parent_nodes)},){parent_node_name}:{tree.up_distance}"
     elif not tree.left and tree.right:
         return f"({traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{tree.up_distance}"
     else:
+        # Tree has two children
         return f"({traverse_tree_recursively(tree.left, newick, named_parent_nodes)},{traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{tree.up_distance}"
 
 
