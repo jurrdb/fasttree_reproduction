@@ -3,6 +3,7 @@ import math
 
 import numpy as np
 
+import distance_measures
 import distance_measures as dm
 from tree import Tree
 
@@ -45,9 +46,15 @@ def compute_total_profile(sequences, sequence_length):
 
 
 def compute_total_profile_active_nodes(active_nodes):
+    """
+    Computes the total_profile: the average profile of all active nodes.
+    :return: total_profile
+    """
     sequence_length = len(active_nodes[0].profile)
     total_profile = np.full((sequence_length, 4), 0.0)
-
+    for node in active_nodes:
+        total_profile += node.profile
+    total_profile /= len(active_nodes)
 
 
 def sequences_to_trees(sequences, total_profile):
@@ -70,8 +77,11 @@ def sequences_to_trees(sequences, total_profile):
 
 
 def calculate_top_hits(node, node_list, target_length):
-    sorted_nodes = sorted(node_list, key=lambda node_b:
-    dm.profile_distance_corrected(node, node_b) - node.out_distance - node_b.out_distance)[1:target_length + 1]
+    nodes_copy = node_list.copy()
+    if node in nodes_copy:
+        nodes_copy.remove(node)
+    sorted_nodes = sorted(nodes_copy, key=lambda node_b:
+        dm.profile_distance_corrected(node, node_b) - node.out_distance - node_b.out_distance)[0:int(target_length)+1]
     node.top_hit_list = sorted_nodes
     return
 
@@ -83,9 +93,23 @@ def calculate_top_hits_active_nodes(active_nodes, m):
     :param m: number of nodes in each hit list (Note: should not include safety factor of 2). By default this is sqrt(N)
     """
     target_length = min(2 * int(m), len(active_nodes))
-    for node in active_nodes:
-        node_copy = copy.copy(active_nodes)
-        calculate_top_hits(node, node_copy, target_length)
+    # initial_node = active_nodes[0]
+    node_copy = copy.copy(active_nodes)
+    # node_copy.remove(initial_node)
+    while len(node_copy) > 0:
+        initial_node = node_copy[0]
+        calculate_top_hits(initial_node, active_nodes, target_length)
+        node_copy.remove(initial_node)
+        for b in initial_node.top_hit_list:
+            if dm.profile_distance_uncorrected(initial_node, b) < 0.75*dm.profile_distance_uncorrected(initial_node, initial_node.top_hit_list[target_length]):
+                calculate_top_hits(b, initial_node.top_hit_list, target_length)
+                if b in node_copy:
+                    node_copy.remove(b)
+
+
+    # for node in active_nodes:
+    #     node_copy = copy.copy(active_nodes)
+    #     calculate_top_hits(node, node_copy, target_length)
     return
 
 
@@ -96,13 +120,18 @@ def join_nodes(left_child, right_child, total_profile, num_active_nodes):
     parent.left = left_child
     parent.right = right_child
 
-    joined_hit_list = list(set(left_child.top_hit_list + right_child.top_hit_list))
-
-    calculate_top_hits(parent, joined_hit_list, math.sqrt(num_active_nodes))
-
     parent.profile = np.mean((left_child.profile, right_child.profile), axis=0)
     parent.calculate_up_distance()
     parent.calculate_out_distance(total_profile, num_active_nodes)
+
+    joined_hit_list = list(set(left_child.top_hit_list + right_child.top_hit_list))
+
+    if left_child in joined_hit_list:
+        joined_hit_list.remove(left_child)
+    if right_child in joined_hit_list:
+        joined_hit_list.remove(right_child)
+
+    calculate_top_hits(parent, joined_hit_list, math.sqrt(num_active_nodes))
 
     return parent  # should return the new parent as well as the new active_nodes
 

@@ -1,3 +1,5 @@
+import numpy as np
+
 import distance_measures
 
 
@@ -24,5 +26,11 @@ class Tree(object):
 
     def calculate_out_distance(self, total_profile, num_active_nodes):
         self.out_distance = (num_active_nodes * distance_measures.delta(self.profile, total_profile) \
-                            - (self.up_distance * 2)) / (num_active_nodes - 2)
+                             - (self.up_distance * 2)) / np.max((num_active_nodes - 2, 1))
 
+    def test_out_distance(self, total_profile, num_active_nodes):
+        # "delta(i,i) is the average distance between children of i including self-comparisons"
+        delta_i_i = distance_measures.delta(self.left, self.right)
+        n_
+        self. out_distance = num_active_nodes * distance_measures.delta(self.profile, total_profile)  \
+                             - (np.max((num_active_nodes - 2, 1)) * self.up_distance)

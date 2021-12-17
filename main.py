@@ -6,15 +6,15 @@ import numpy as np
 import distance_measures as dm
 import helpers
 from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_active_nodes, compute_total_profile, \
-                    join_nodes
+                    compute_total_profile_active_nodes, join_nodes
 
 # u(i) = up-distance: "The average distance of the node from its children."
 # Δ(i,j) = profile distance
 # P(AB) = average profile
 # d_u(i,j) = Distance between internal nodes: d_u(i,j) = Δ(i,j) - u(i) - u(j)
-
-# NOT USED in Fast Tree:
 # r(i) = out-distance: "average out distance of i to other active nodes"
+#
+# L = number of positions / sequence length
 
 
 def parse_input():
@@ -69,16 +69,16 @@ def run(sequences, sequence_length):
 
         if num_joined_nodes % 200 == 199:
             print('Recalculating total profile')
-            total_profile = compute_total_profile([node.profile for node in active_nodes], sequence_length)
+            # TODO test this
+            total_profile = compute_total_profile_active_nodes(active_nodes)
 
-        # TODO count number of joins and recalculate total_profile after 200 joins
+    # interchange nodes postorder until log(N) + 1 rounds of interchanges
     initial_topology = copy.deepcopy(active_nodes[0])
-    max_rounds = math.log2(num_nodes) + 1
+    max_rounds = math.inf #math.log2(num_nodes) + 1
     counter = helpers.Counter(max_rounds=max_rounds)
 
-    # interchange nodes postorder until log rounds of interchanges
     final_topology = interchange_nodes(active_nodes[0], counter)
-    while counter.count < counter.max_rounds:
+    for i in range(int(math.log2(num_nodes))):
         final_topology = interchange_nodes(final_topology, counter)
 
     return initial_topology, final_topology
