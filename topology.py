@@ -44,6 +44,12 @@ def compute_total_profile(sequences, sequence_length):
     return total_profile
 
 
+def compute_total_profile_active_nodes(active_nodes):
+    sequence_length = len(active_nodes[0].profile)
+    total_profile = np.full((sequence_length, 4), 0.0)
+
+
+
 def sequences_to_trees(sequences, total_profile):
     """
     Converts each nucleotide sequence to a list of Tree node objects. Each Tree will initially contain only a single

@@ -38,6 +38,7 @@ def run(sequences, sequence_length):
     num_nodes = len(active_nodes)
     calculate_top_hits_active_nodes(active_nodes, math.sqrt(num_nodes))
 
+    num_joined_nodes = 0
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
         min = np.inf
@@ -47,19 +48,18 @@ def run(sequences, sequence_length):
                 dis = dm.profile_distance_corrected(node_a, node_b) - node_a.out_distance - node_b.out_distance
                 # TODO from paper: Traditional Neighbor-Joining computes all N time, and updates each out-distance
                 #  after each join, which also takes O(N2) time overall
-                #  To avoid this work, FastTree computes each out-distance as needed in O(La) time by also takes O(N2)
-                #  time overall. To avoid this work, FastTree computes each out-distance as needed in O(La) time by
-                #  using a “total profile” T which is the average of all active computes each out-distance as needed
-                #  in O(La) time by using a “total profile” T which is the average of all active nodes’ profiles, as
-                #  implied by using a “total profile” T which is the average of all active nodes’ profiles, as implied
-                #  by: (See formula on p. 1644)
+                #  To avoid this work, FastTree computes each out-distance as needed in O(La) time by
+                #  using a “total profile” T which is the average of all active nodes’ profiles, as
+                #  implied by: (See formula on p. 1644)
                 if dis < min:
                     min = dis
                     pair = (node_b, node_a)
+
         # Join nodes, update values
         active_nodes.remove(pair[0])
         active_nodes.remove(pair[1])
         parent = join_nodes(pair[0], pair[1], total_profile, len(active_nodes))
+        num_joined_nodes += 1
         active_nodes.append(parent)
 
         for node in active_nodes:
@@ -67,12 +67,20 @@ def run(sequences, sequence_length):
                 if hit == pair[0] or hit == pair[1]:
                     node.top_hit_list[i] = parent
 
+        if num_joined_nodes % 200 == 199:
+            print('Recalculating total profile')
+            total_profile = compute_total_profile([node.profile for node in active_nodes], sequence_length)
+
         # TODO count number of joins and recalculate total_profile after 200 joins
     initial_topology = copy.deepcopy(active_nodes[0])
     max_rounds = math.log2(num_nodes) + 1
     counter = helpers.Counter(max_rounds=max_rounds)
-    # TODO do more than one postorder run
+
+    # interchange nodes postorder until log rounds of interchanges
     final_topology = interchange_nodes(active_nodes[0], counter)
+    while counter.count < counter.max_rounds:
+        final_topology = interchange_nodes(final_topology, counter)
+
     return initial_topology, final_topology
 
 
