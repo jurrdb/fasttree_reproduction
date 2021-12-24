@@ -1,10 +1,12 @@
 import copy
 import math
 
+import newick
 import numpy as np
 
 import distance_measures as dm
-import helpers
+from counter import Counter
+from plot_tree import to_newick
 from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_active_nodes, compute_total_profile, \
                     compute_total_profile_active_nodes, join_nodes
 
@@ -39,7 +41,9 @@ def run(sequences, sequence_length):
     calculate_top_hits_active_nodes(active_nodes, math.sqrt(num_nodes))
 
     num_joined_nodes = 0
-    active_nodes = sorted(active_nodes, key=lambda x: x.out_distance,reverse=True)
+    active_nodes = sorted(active_nodes, key=lambda x: dm.profile_distance_corrected(x, x.top_hit_list[0]) -
+                          x.out_distance - x.top_hit_list[0].out_distance)
+
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
         min = np.inf
@@ -76,7 +80,7 @@ def run(sequences, sequence_length):
     # interchange nodes postorder until log(N) + 1 rounds of interchanges
     initial_topology = copy.deepcopy(active_nodes[0])
     max_rounds = math.inf #math.log2(num_nodes) + 1
-    counter = helpers.Counter(max_rounds=max_rounds)
+    counter = Counter(max_rounds=max_rounds)
 
     final_topology = interchange_nodes(active_nodes[0], counter)
     for i in range(int(math.log2(num_nodes))*4):
@@ -87,6 +91,12 @@ def run(sequences, sequence_length):
 
 if __name__ == '__main__':
     sequences, sequence_length = parse_input()
-    run(sequences, sequence_length)
+    tree, final_tree = run(sequences, sequence_length)
+    newick_string = to_newick(tree, named_parent_nodes=False)
+    newick_string_final = to_newick(final_tree, named_parent_nodes=False)
+    n_tree = newick.loads(newick_string)[0]
+    f_tree = newick.loads(newick_string_final)[0]
+    print(n_tree.ascii_art())
+    print(f_tree.ascii_art())
 
     # print(sequence_distance_uncorrected(sequences['>0'], sequences['>1']))

@@ -1,11 +1,9 @@
-import newick
-
-import main
 from tree import Tree
 
 
 def calculate_branch_lengths(topology):
     pass
+
 
 def temp_generate_test_tree():
     # Test structure is same as example in https://en.wikipedia.org/wiki/Newick_format#Examples
@@ -86,15 +84,3 @@ def to_newick(tree, named_parent_nodes=True):
     newick = f"{newick};"
     print("Created newick format:\n", newick)
     return newick
-
-
-if __name__ == '__main__':
-    # Debug driver function
-    sequences, sequence_length = main.parse_input()
-    tree, final_tree = main.run(sequences, sequence_length)
-    newick_string = to_newick(tree, named_parent_nodes=False)
-    newick_string_final = to_newick(final_tree, named_parent_nodes=False)
-    n_tree = newick.loads(newick_string)[0]
-    f_tree = newick.loads(newick_string_final)[0]
-    print(n_tree.ascii_art())
-    print(f_tree.ascii_art())
