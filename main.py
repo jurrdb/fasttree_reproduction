@@ -20,7 +20,7 @@ from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_a
 
 
 def parse_input():
-    with open('data/fasttree-input.aln') as f:
+    with open('data/test-small.aln') as f:
         lines = f.readlines()
         sequences = {}
         for i in range(0, len(lines), 2):
@@ -41,8 +41,6 @@ def run(sequences, sequence_length):
     calculate_top_hits_active_nodes(active_nodes, math.sqrt(num_nodes))
 
     num_joined_nodes = 0
-    active_nodes = sorted(active_nodes, key=lambda x: dm.profile_distance_corrected(x, x.top_hit_list[0]) -
-                          x.out_distance - x.top_hit_list[0].out_distance)
 
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
@@ -56,7 +54,7 @@ def run(sequences, sequence_length):
                 #  To avoid this work, FastTree computes each out-distance as needed in O(La) time by
                 #  using a “total profile” T which is the average of all active nodes’ profiles, as
                 #  implied by: (See formula on p. 1644)
-                if dis < min:
+                if dis <= min:
                     min = dis
                     pair = (node_a, node_b)
 
@@ -79,7 +77,7 @@ def run(sequences, sequence_length):
 
     # interchange nodes postorder until log(N) + 1 rounds of interchanges
     initial_topology = copy.deepcopy(active_nodes[0])
-    max_rounds = math.inf #math.log2(num_nodes) + 1
+    max_rounds = math.inf   # math.log2(num_nodes) + 1
     counter = Counter(max_rounds=max_rounds)
 
     final_topology = interchange_nodes(active_nodes[0], counter)

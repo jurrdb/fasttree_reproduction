@@ -1,4 +1,5 @@
 from tree import Tree
+from distance_measures import profile_distance_corrected as d
 
 
 def calculate_branch_lengths(topology):
@@ -59,17 +60,37 @@ def calculate_branch_length(tree):
 
 def traverse_tree_recursively(tree, newick, named_parent_nodes=True):
     parent_node_name = tree.name if named_parent_nodes else ""
+    branch_length = 0
     if not tree.left and not tree.right:
         # Tree is leaf
-        return f"{tree.name}:{tree.up_distance}"
+        if tree.parent is not None and tree.parent.parent is not None:
+            # Branch length = d(A,BC) = ( d(A,B) + d(A,C) - d(B,C) ) / 2
+            N = tree.parent
+            P = tree.parent.parent
+            A = tree
+            B = N.left if N.left != A else N.right
+            C = P.right if P.right != N else P.left
+            branch_length = (d(A, B) + d(A, C) - d(B, C)) / 2
+        return f"{tree.name}:{branch_length}"
     elif tree.left and not tree.right:
-        # Tree has a left child, no right child
-        return f"(,{traverse_tree_recursively(tree.left, newick, named_parent_nodes)},){parent_node_name}:{tree.up_distance}"
+        # Tree has a left child, but no right child
+        return f"(,{traverse_tree_recursively(tree.left, newick, named_parent_nodes)},){parent_node_name}:{branch_length}"
     elif not tree.left and tree.right:
-        return f"({traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{tree.up_distance}"
+        # Tree has a right child, but no left child
+        return f"({traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{branch_length}"
     else:
         # Tree has two children
-        return f"({traverse_tree_recursively(tree.left, newick, named_parent_nodes)},{traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{tree.up_distance}"
+        if tree.parent is not None and tree.parent.parent is not None:
+            # Branch length = d(A,BC) = ( d(A,B) + d(A,D) + d(B,C) + d(B,D) ) / 4 - ( d(A,B) + d(C,D) ) / 2
+            N = tree
+            P = tree.parent
+            R = tree.parent.parent
+            A = N.left
+            B = N.right
+            C = P.right if P.right != N else P.left
+            D = R.right if R.right != P else R.left
+            branch_length = (d(A, C) + d(A, D) + d(B, C) + d(B, D)) / 4 - (d(A, B) + d(C, D)) / 2
+        return f"({traverse_tree_recursively(tree.left, newick, named_parent_nodes)},{traverse_tree_recursively(tree.right, newick, named_parent_nodes)}){parent_node_name}:{branch_length}"
 
 
 def to_newick(tree, named_parent_nodes=True):

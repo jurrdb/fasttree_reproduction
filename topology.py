@@ -3,7 +3,6 @@ import math
 
 import numpy as np
 
-import distance_measures
 import distance_measures as dm
 from tree import Tree
 
@@ -115,6 +114,8 @@ def join_nodes(left_child, right_child, total_profile, num_active_nodes):
     parent.name = left_child.name + right_child.name  # Concatenate names to create new parent name
     parent.left = left_child
     parent.right = right_child
+    left_child.parent = parent
+    right_child.parent = parent
 
     parent.profile = np.mean((left_child.profile, right_child.profile), axis=0)
     parent.calculate_up_distance()
@@ -138,10 +139,11 @@ def try_interchange(tree, counter, side_a, side_b):
         A = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_a)
         B = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_b)
         C = tree.__getattribute__(side_a).__getattribute__(side_b)
-        D = tree.__getattribute__(side_b)
+        D = tree
 
         if A and B and C and D:
             # reached count?
+            P = tree.__getattribute__(side_a)
             N = tree.__getattribute__(side_a).__getattribute__(side_a)
             # Calculate distances
             # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
@@ -153,16 +155,23 @@ def try_interchange(tree, counter, side_a, side_b):
                 print("performed interchange (" + side_a + ")")
                 # dist_ACBD is smallest, B and C swapped
                 N.__setattr__(side_b, C)
-                tree.__getattribute__(side_a).__setattr__(side_b, B)
+                P.__setattr__(side_b, B)
+                C.parent = N
+                B.parent = P
                 counter.count += 1
             elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
                 print("performed interchange (" + side_a + ")")
                 # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
                 N.__setattr__(side_b, D)
+                D.parent = N
                 tree.__setattr__(side_b, C)
+                C.parent = tree
                 tree.__getattribute__(side_a).__setattr__(side_b, B)
+                B.parent = P
                 counter.count += 1
             # Else dist_ABCD is smallest, do nothing
+            else:
+                print("performed no interchange (" + side_a + ")")
     except AttributeError:
         print("interchange_nodes: skipping leaf node (" + side_a + ")")
 

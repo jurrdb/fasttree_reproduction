@@ -5,6 +5,7 @@ import distance_measures
 
 class Tree(object):
     def __init__(self):
+        self.parent = None
         self.left = None
         self.right = None
         self.name = None
