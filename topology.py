@@ -54,6 +54,7 @@ def compute_total_profile_active_nodes(active_nodes):
     for node in active_nodes:
         total_profile += node.profile
     total_profile /= len(active_nodes)
+    return total_profile
 
 
 def sequences_to_trees(sequences, total_profile):
@@ -80,7 +81,7 @@ def calculate_top_hits(node, node_list, target_length):
     if node in nodes_copy:
         nodes_copy.remove(node)
     sorted_nodes = sorted(nodes_copy, key=lambda node_b:
-        dm.profile_distance_corrected(node, node_b) - node.out_distance - node_b.out_distance)[0:int(target_length)+1]
+    dm.profile_distance_corrected(node, node_b) - node.out_distance - node_b.out_distance)[0:int(target_length) + 1]
     node.top_hit_list = sorted_nodes
     return
 
@@ -100,7 +101,9 @@ def calculate_top_hits_active_nodes(active_nodes, m):
         calculate_top_hits(initial_node, active_nodes, target_length)
         node_copy.remove(initial_node)
         for b in initial_node.top_hit_list:
-            if dm.profile_distance_uncorrected(initial_node, b) < 0.75*dm.profile_distance_uncorrected(initial_node, initial_node.top_hit_list[target_length]):
+            if dm.profile_distance_uncorrected(initial_node, b) < 0.75 * dm.profile_distance_uncorrected(initial_node,
+                                                                                                         initial_node.top_hit_list[
+                                                                                                             target_length]):
                 calculate_top_hits(b, initial_node.top_hit_list, target_length)
                 if b in node_copy:
                     node_copy.remove(b)
@@ -149,9 +152,9 @@ def try_interchange(tree, counter, side_a, side_b):
             # d(A,B) + d(C,D) < d(A,C) + d(B,D) and d(A,B) + d(C,D) < d(A,D) + d(B,C)
             dist_ABCD = dm.profile_distance_corrected(A, B) + dm.profile_distance_corrected(C, D)
             dist_ACBD = dm.profile_distance_corrected(A, C) + dm.profile_distance_corrected(B, D)
-            dist_ADBC = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
+            dist_BCAD = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
 
-            if dist_ACBD < dist_ABCD and dist_ACBD < dist_ADBC:
+            if dist_ACBD < dist_ABCD and dist_ACBD < dist_BCAD:
                 print("performed interchange (" + side_a + ")")
                 # dist_ACBD is smallest, B and C swapped
                 N.__setattr__(side_b, C)
@@ -159,15 +162,20 @@ def try_interchange(tree, counter, side_a, side_b):
                 C.parent = N
                 B.parent = P
                 counter.count += 1
-            elif dist_ADBC < dist_ABCD and dist_ADBC < dist_ACBD:
+            elif dist_BCAD < dist_ABCD and dist_BCAD < dist_ACBD:
                 print("performed interchange (" + side_a + ")")
-                # dist_ADBC is smallest, D takes place of B, B takes place of C and C takes place of D
-                N.__setattr__(side_b, D)
-                D.parent = N
-                tree.__setattr__(side_b, C)
-                C.parent = tree
-                tree.__getattribute__(side_a).__setattr__(side_b, B)
+                # dist_BCAD is smallest, D takes place of B, B takes place of C and C takes place of D
                 B.parent = P
+                C.parent = P
+                P.__setattr__(side_a, B)
+                P.__setattr__(side_b, C)
+
+                P.parent = N
+                N.__setattr__(side_a, P)
+                N.__setattr__(side_b, A)
+                N.parent = D
+                D.__setattr__(side_a, N)
+
                 counter.count += 1
             # Else dist_ABCD is smallest, do nothing
             else:
@@ -210,9 +218,9 @@ def interchange_nodes(tree, counter):
 
     # Algorithm Postorder(tree)
     #    1. Traverse the left subtree, i.e., call Postorder(left-subtree)
-    tree.left = interchange_nodes(tree.left, counter)
+    interchange_nodes(tree.left, counter)
     #    2. Traverse the right subtree, i.e., call Postorder(right-subtree)
-    tree.right = interchange_nodes(tree.right, counter)
+    interchange_nodes(tree.right, counter)
     #    3. Visit the root.
     # perform interchange (get relevant subtrees A B C D and calculate best topology)
 

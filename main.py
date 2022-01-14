@@ -1,5 +1,6 @@
 import copy
 import math
+import sys
 
 import newick
 import numpy as np
@@ -10,6 +11,8 @@ from plot_tree import to_newick
 from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_active_nodes, compute_total_profile, \
                     compute_total_profile_active_nodes, join_nodes
 
+INPUT_FILE_PATH = 'data/fasttree-input.aln'
+
 # u(i) = up-distance: "The average distance of the node from its children."
 # Δ(i,j) = profile distance
 # P(AB) = average profile
@@ -19,8 +22,8 @@ from topology import sequences_to_trees, interchange_nodes, calculate_top_hits_a
 # L = number of positions / sequence length
 
 
-def parse_input():
-    with open('data/test-small.aln') as f:
+def parse_input(filename):
+    with open(filename) as f:
         lines = f.readlines()
         sequences = {}
         for i in range(0, len(lines), 2):
@@ -41,6 +44,7 @@ def run(sequences, sequence_length):
     calculate_top_hits_active_nodes(active_nodes, math.sqrt(num_nodes))
 
     num_joined_nodes = 0
+    count = 0
 
     while len(active_nodes) > 1:
         # Find best candidates for join using criterion
@@ -49,11 +53,6 @@ def run(sequences, sequence_length):
         for i, node_a in enumerate(active_nodes):
             for node_b in node_a.top_hit_list:
                 dis = dm.profile_distance_corrected(node_a, node_b) - node_a.out_distance - node_b.out_distance
-                # TODO from paper: Traditional Neighbor-Joining computes all N time, and updates each out-distance
-                #  after each join, which also takes O(N2) time overall
-                #  To avoid this work, FastTree computes each out-distance as needed in O(La) time by
-                #  using a “total profile” T which is the average of all active nodes’ profiles, as
-                #  implied by: (See formula on p. 1644)
                 if dis <= min:
                     min = dis
                     pair = (node_a, node_b)
@@ -70,10 +69,11 @@ def run(sequences, sequence_length):
                 if hit == pair[0] or hit == pair[1]:
                     node.top_hit_list[i] = parent
 
-        if num_joined_nodes % 200 == 199:
-            print('Recalculating total profile')
-            # TODO test this
-            total_profile = compute_total_profile_active_nodes(active_nodes)
+        # if num_joined_nodes % 200 == 199:
+        #     print('Recalculating total profile')
+        #     # TODO test this
+        total_profile = compute_total_profile_active_nodes(active_nodes)
+        # if len(active_nodes) > 2:
 
     # interchange nodes postorder until log(N) + 1 rounds of interchanges
     initial_topology = copy.deepcopy(active_nodes[0])
@@ -88,7 +88,8 @@ def run(sequences, sequence_length):
 
 
 if __name__ == '__main__':
-    sequences, sequence_length = parse_input()
+    sys.setrecursionlimit(4000)
+    sequences, sequence_length = parse_input(INPUT_FILE_PATH)
     tree, final_tree = run(sequences, sequence_length)
     newick_string = to_newick(tree, named_parent_nodes=False)
     newick_string_final = to_newick(final_tree, named_parent_nodes=False)
