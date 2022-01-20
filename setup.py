@@ -1,15 +1,17 @@
 from setuptools import setup
 
 setup(
-    name='fasttreerep',
+    name='fasttree',
     version='1.0.0',
-    py_modules=['cli'],
+    py_modules=['cli', 'main', 'counter', 'distance_measures', 'plot_tree', 'topology', 'tree'],
     install_requires=[
         'Click',
+        'newick',
+        'numpy',
     ],
     entry_points={
         'console_scripts': [
-            'fasttreerep = cli:run_fasttree',
+            'fasttree = cli:run_fasttree',
         ],
     },
 )

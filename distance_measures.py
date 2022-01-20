@@ -28,6 +28,6 @@ def profile_distance_uncorrected(A, B):
 
 
 def profile_distance_corrected(A, B):
-    # TODO correct for the proportion of nongaps (See section 'Distance Between Profiles')
+    # Currently we do not use the corrected transform
     return profile_distance_uncorrected(A, B)
 

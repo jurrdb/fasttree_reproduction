@@ -1,6 +1,9 @@
 # FastTree reproduction
 A reproduction of the Fast Tree algorithm by Price et al. (2009), which generates a phylogenetic tree from a list of nucleotide sequences.
 
+## Installation
+To install the software, navigate to the fasttree directory and run `pip install .`. This registers
+
 ## How to run the program
 
 ### Using a Python compatible IDE

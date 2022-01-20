@@ -73,7 +73,6 @@ def generate_tree(sequences, sequence_length):
                     node.top_hit_list[i] = parent
 
         if num_joined_nodes % 200 == 199 or len(active_nodes) < 200:
-            # TODO test this
             total_profile = compute_total_profile_active_nodes(active_nodes)
 
 
