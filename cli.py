@@ -16,6 +16,7 @@ def run_fasttree(output_file, print_tree, input_file):
     Runs the FastTree algorithm to generate a phylogenetic tree from a list of nucleotide sequences. Requires a *.aln file as input.
     See Price MN, Dehal PS, Arkin AP. FastTree: computing large minimum evolution trees with profiles instead of a distance matrix. Mol Biol Evol. 2009;26(7):1641-1650. doi:10.1093/molbev/msp077
     for more information about the FastTree algorithm.
+    Reproduction of the FastTree algorithm, by Eljo Dorrestijn, Jurrian de Boer and Frank te Nijenhuis
     """
     run(input_file, output_file, print_tree)
 
