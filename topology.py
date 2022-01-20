@@ -4,7 +4,7 @@ import math
 import numpy as np
 
 import distance_measures as dm
-from tree import Tree
+from phylo_tree import Tree
 
 nt_map = {
     'A': 0,

@@ -15,7 +15,7 @@ Note that the constants in main.py (INPUT_FILE PATH and OUTPUT_FILE_PATH) are ig
 	* file: path to the input file (*.aln) containing the input nucleotide sequences.
 * Optional parameters:
 	* output_file: path where the resulting tree is stored in Newick format.
-	* print_tree: flag whether or not to print the output to the terminal, defaults to False
+	* print_tree: flag whether to print the output to the terminal, defaults to False
 
 ### Using a Python compatible IDE
 The `main.py` module contains constants which can be manually updated to run the program.
