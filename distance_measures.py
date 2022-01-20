@@ -26,19 +26,6 @@ def delta(Profile_A: np.ndarray, Profile_B: np.ndarray):
 def profile_distance_uncorrected(A, B):
     return delta(A.profile, B.profile) - A.up_distance - B.up_distance
 
-    # if A.is_leaf() and B.is_leaf():
-    #     # d_u(i,j) = delta (i,j) - u(i) - u(j)
-    #     return delta(A.profile, B.profile) - A.calculate_up_distance() - B.calculate_up_distance()
-    #     # return sequence_distance_uncorrected(A, B)
-    # elif B.is_leaf():
-    #     return profile_distance_uncorrected(A.left, B) + profile_distance_uncorrected(A.right, B)
-    #     # d_u(A, B) = d(A.left, B) + d(A.right, B)
-    # elif A.is_leaf():
-    #     return profile_distance_uncorrected(B.left, A) + profile_distance_uncorrected(B.right, A)
-    #     # d_u(A, B) = d(B.left, A) + d(B.right, A)
-    #
-    # return profile_distance_uncorrected(A.left, A.right) / 2 + profile_distance_uncorrected(B.left, B.right) / 2
-
 
 def profile_distance_corrected(A, B):
     # TODO correct for the proportion of nongaps (See section 'Distance Between Profiles')

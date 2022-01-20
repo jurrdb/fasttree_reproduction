@@ -15,6 +15,12 @@ nt_map = {
 
 
 def sequence_to_profile(sequence):
+    """
+    Converts a sequence to a profile
+
+    :param sequence: a string of nucleotides
+    :return: profile of the sequence
+    """
     sequence_length = len(sequence)
     profile = np.full((sequence_length, 4), 0.0)
 
@@ -26,8 +32,14 @@ def sequence_to_profile(sequence):
 
 
 def compute_total_profile(sequences, sequence_length):
+    """
+    Computes the total profile of all the given sequences
+
+    :param sequences: dictionary containing nucleotide sequences
+    :param sequence_length: length of the given sequences
+    :return: total profile
+    """
     number_of_sequences = len(sequences)
-    print('Number of sequences:', number_of_sequences)
 
     # Total profile is an array of dictionaries. Each index in the array represents a position in the sequence, and
     # each dictionary represents the frequency of nucleotides in that position.
@@ -71,12 +83,17 @@ def sequences_to_trees(sequences, total_profile):
         node = Tree()
         node.name = name
         node.profile = sequence_to_profile(s)
-        node.calculate_out_distance(total_profile, num_active_nodes)
+        node.calculate_out_distance(total_profile, num_active_nodes, 0)
         nodes.append(node)
     return nodes
 
 
 def calculate_top_hits(node, node_list, target_length):
+    """
+    :param node: nodes that are being considered for joining
+    :param node_list: number of nodes in each hit list
+    :param target_length: the required length of the top hit list
+    """
     nodes_copy = node_list.copy()
     if node in nodes_copy:
         nodes_copy.remove(node)
@@ -89,6 +106,11 @@ def calculate_top_hits(node, node_list, target_length):
 def calculate_top_hits_active_nodes(active_nodes, m):
     """
     Find the 2m closest node for each node (the top hit list) according to the neighbor joining criterion
+
+    Example from the wiki: Compute the 2m top hits of node A (2 is a safety factor). Then, for each node B
+    within the top m hits of A that does not already have a top-hits list, estimate the top hits of B by
+    comparing B to the top 2m hits of A.
+
     :param active_nodes: nodes that are being considered for joining
     :param m: number of nodes in each hit list (Note: should not include safety factor of 2). By default this is sqrt(N)
     """
@@ -100,7 +122,7 @@ def calculate_top_hits_active_nodes(active_nodes, m):
         initial_node = node_copy[0]
         calculate_top_hits(initial_node, active_nodes, target_length)
         node_copy.remove(initial_node)
-        for b in initial_node.top_hit_list:
+        for b in initial_node.top_hit_list[:math.ceil(m)]:
             if dm.profile_distance_uncorrected(initial_node, b) < 0.75 * dm.profile_distance_uncorrected(initial_node,
                                                                                                          initial_node.top_hit_list[
                                                                                                              target_length]):
@@ -111,7 +133,17 @@ def calculate_top_hits_active_nodes(active_nodes, m):
     return
 
 
-def join_nodes(left_child, right_child, total_profile, num_active_nodes):
+def join_nodes(left_child, right_child, total_profile, num_active_nodes, total_distance):
+    """
+    function for joining two nodes and creating a parent node
+
+    :param left_child: left node to join
+    :param right_child: right node to join
+    :param total_profile: the total profile of all sequences
+    :param num_active_nodes: integer of the total active nodes
+    :param total_distance: the sum of all up distances of the active nodes
+    """
+
     # Construct new tree node
     parent = Tree()
     parent.name = left_child.name + right_child.name  # Concatenate names to create new parent name
@@ -122,7 +154,7 @@ def join_nodes(left_child, right_child, total_profile, num_active_nodes):
 
     parent.profile = np.mean((left_child.profile, right_child.profile), axis=0)
     parent.calculate_up_distance()
-    parent.calculate_out_distance(total_profile, num_active_nodes)
+    parent.calculate_out_distance(total_profile, num_active_nodes, total_distance)
 
     joined_hit_list = list(set(left_child.top_hit_list + right_child.top_hit_list))
 
@@ -137,6 +169,15 @@ def join_nodes(left_child, right_child, total_profile, num_active_nodes):
 
 
 def try_interchange(tree, counter, side_a, side_b):
+    """
+    function for traversing the tree in postorder and finding possible interchange in the tree.
+
+    :param tree: binary tree containing all nodes
+    :param counter: a counter to limit the amount of total interchanges done
+    :param side_a: a string that can be either left or right
+    :param side_b: a string that can be either left or right
+    """
+
     try:
         # To deal with tree symmetry we use getters that can get both the left and right sided subtree nodes.
         A = tree.__getattribute__(side_a).__getattribute__(side_a).__getattribute__(side_a)
@@ -155,7 +196,6 @@ def try_interchange(tree, counter, side_a, side_b):
             dist_BCAD = dm.profile_distance_corrected(A, D) + dm.profile_distance_corrected(B, C)
 
             if dist_ACBD < dist_ABCD and dist_ACBD < dist_BCAD:
-                print("performed interchange (" + side_a + ")")
                 # dist_ACBD is smallest, B and C swapped
                 N.__setattr__(side_b, C)
                 P.__setattr__(side_b, B)
@@ -163,7 +203,6 @@ def try_interchange(tree, counter, side_a, side_b):
                 B.parent = P
                 counter.count += 1
             elif dist_BCAD < dist_ABCD and dist_BCAD < dist_ACBD:
-                print("performed interchange (" + side_a + ")")
                 # dist_BCAD is smallest, D takes place of B, B takes place of C and C takes place of D
                 B.parent = P
                 C.parent = P
@@ -178,10 +217,9 @@ def try_interchange(tree, counter, side_a, side_b):
 
                 counter.count += 1
             # Else dist_ABCD is smallest, do nothing
-            else:
-                print("performed no interchange (" + side_a + ")")
+
     except AttributeError:
-        print("interchange_nodes: skipping leaf node (" + side_a + ")")
+        return
 
 
 def interchange_nodes(tree, counter):

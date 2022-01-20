@@ -25,7 +25,7 @@ class Tree(object):
             return 0
         self.up_distance = distance_measures.delta(self.left.profile, self.right.profile) / 2
 
-    def calculate_out_distance(self, total_profile, num_active_nodes):
+    def calculate_out_distance(self, total_profile, num_active_nodes, total_up):
         """
         :return: out_distance = r(i) = ( n * delta(i, T) - delta(i,i) ) / (n - 2)
         """
@@ -36,5 +36,6 @@ class Tree(object):
             delta_i_i = 2*self.up_distance
         else:
             delta_i_i = 0
-        self.out_distance = (num_active_nodes * distance_measures.delta(self.profile, total_profile) \
-                             - delta_i_i) / np.max((num_active_nodes - 2, 1))
+        n = num_active_nodes
+        self.out_distance = (n * distance_measures.delta(self.profile, total_profile) \
+                             - delta_i_i - (n - 1) * self.up_distance + self.up_distance - total_up) / np.max((n - 2, 1))
