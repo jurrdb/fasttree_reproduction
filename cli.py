@@ -9,7 +9,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.argument('input_file', type=click.Path(exists=True))
 @click.option('-o', '--output_file', default="output_tree.txt",
               help='filename of the output to be generated, defaults to output_tree.txt')
-@click.option('-p', '--print_tree', default=False, type=click.BOOL,
+@click.option('-p', '--print_tree', default=False, is_flag=True,
               help='flag whether or not to print the output to the terminal, defaults to False')
 def run_fasttree(output_file, print_tree, input_file):
     """
