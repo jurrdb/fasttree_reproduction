@@ -92,9 +92,13 @@ def run(input_file_path, output_file_name, verbose):
     sys.setrecursionlimit(4000)
     sequences, sequence_length = parse_input(input_file_path if input_file_path is not None else INPUT_FILE_PATH)
     tree, final_tree = generate_tree(sequences, sequence_length)
+
+    # Make Newick of initial tree topology
     # newick_string = to_newick(tree, named_parent_nodes=False, sequence_len=sequence_length)
-    newick_string_final = to_newick(final_tree, named_parent_nodes=False, sequence_len=sequence_length)
     # n_tree = newick.loads(newick_string)[0]
+
+    # Make tree of final tree topology
+    newick_string_final = to_newick(final_tree, named_parent_nodes=False, sequence_len=sequence_length)
     f_tree = newick.loads(newick_string_final)[0]
     # print(n_tree.ascii_art())
     if verbose:

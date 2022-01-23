@@ -257,11 +257,13 @@ def interchange_nodes(tree, counter):
     # Algorithm Postorder(tree)
     #    1. Traverse the left subtree, i.e., call Postorder(left-subtree)
     interchange_nodes(tree.left, counter)
+
     #    2. Traverse the right subtree, i.e., call Postorder(right-subtree)
     interchange_nodes(tree.right, counter)
+
     #    3. Visit the root.
     # perform interchange (get relevant subtrees A B C D and calculate best topology)
-
     try_interchange(tree, counter, 'right', 'left')
     try_interchange(tree, counter, 'left', 'right')
+
     return tree

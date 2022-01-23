@@ -41,12 +41,6 @@ def traverse_tree_recursively(tree, newick, named_parent_nodes=True, sequence_le
 
 
 def to_newick(tree, named_parent_nodes=True, sequence_len=1):
-    # # ----- DEBUG -----
-    # test_tree = temp_generate_test_tree()
-    # tree = test_tree
-    # # Expected outcome: (B:0.2,(C:0.3,D:0.4)E:0.5)F;
-    # # --- END DEBUG ---
-
     newick = ""
     newick = traverse_tree_recursively(tree, newick, named_parent_nodes, sequence_len=sequence_len)
     newick = f"{newick};"
